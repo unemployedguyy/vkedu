@@ -29,7 +29,8 @@
 docker compose up -d
 docker compose ps
 python scripts/run.py all
-docker compose --profile bi up -d --build superset
+docker compose --profile bi build superset
+docker compose --profile bi up -d --no-deps superset
 ~~~
 
 Пример конфигурации каталога Trino, где хранение идет через MinIO:
@@ -181,7 +182,8 @@ FOR VERSION AS OF <snapshot_id>;
 Выбран **Apache Superset**. Он запускается в Docker отдельно от обязательных компонентов:
 
 ~~~powershell
-docker compose --profile bi up -d --build superset
+docker compose --profile bi build superset
+docker compose --profile bi up -d --no-deps superset
 ~~~
 
 В интерфейсе по адресу `http://localhost:8088` можно добавить подключение Trino по URI `trino://student@trino:8080/iceberg/bronze_zstd` и в SQL Lab выполнить:
