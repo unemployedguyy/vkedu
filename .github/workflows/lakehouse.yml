@@ -3,9 +3,12 @@ name: Lakehouse Q16
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - "report.md"
-      - "results/**"
+    paths:
+      - "compose.yaml"
+      - "config/**"
+      - "scripts/**"
+      - "sql/**"
+      - ".github/workflows/lakehouse.yml"
   workflow_dispatch:
 
 permissions:
