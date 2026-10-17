@@ -64,9 +64,10 @@ services:
       lakekeeper: {condition: service_healthy}
     volumes: ["./config/warehouse.json:/warehouse.json:ro"]
     entrypoint: ["/bin/sh", "-ec"]
-    command: |
-      curl --fail-with-body -sS -X POST http://lakekeeper:8181/management/v1/bootstrap -H 'Content-Type: application/json' -d '{"accept-terms-of-use":true}'
-      curl --fail-with-body -sS -X POST http://lakekeeper:8181/management/v1/warehouse -H 'Content-Type: application/json' --data-binary @/warehouse.json
+    command:
+      - |
+        curl --fail-with-body -sS -X POST http://lakekeeper:8181/management/v1/bootstrap -H 'Content-Type: application/json' -d '{"accept-terms-of-use":true}'
+        curl --fail-with-body -sS -X POST http://lakekeeper:8181/management/v1/warehouse -H 'Content-Type: application/json' --data-binary @/warehouse.json
     restart: "no"
 
   trino:
