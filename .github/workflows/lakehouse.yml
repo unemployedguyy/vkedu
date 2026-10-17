@@ -36,15 +36,10 @@ jobs:
             results/metrics.json
             report.md
           if-no-files-found: warn
-      - name: Commit validated report
+      - name: Check generated report
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add report.md
-          if ! git diff --cached --quiet; then
-            git commit -m "Update report with measured Q16 results"
-            git push
-          fi
+          grep -q "Проверка пройдена" report.md
+          test -s results/metrics.json
       - name: Print stack diagnostics on failure
         if: failure()
         run: |
