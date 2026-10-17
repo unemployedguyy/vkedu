@@ -1,0 +1,55 @@
+name: Lakehouse Q16
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "report.md"
+      - "results/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - name: Docker Compose syntax
+        run: docker compose config --quiet
+      - name: Start the stack
+        run: docker compose up -d
+      - name: Wait for Trino
+        run: python3 scripts/wait_for_trino.py
+      - name: Run the lab and measure results
+        env:
+          TPCH_SCHEMA: sf1
+        run: python3 scripts/run.py all
+      - name: Save detailed measurements
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: q16-measurements
+          path: |
+            results/metrics.json
+            report.md
+          if-no-files-found: warn
+      - name: Commit validated report
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add report.md
+          if ! git diff --cached --quiet; then
+            git commit -m "Update report with measured Q16 results"
+            git push
+          fi
+      - name: Print stack diagnostics on failure
+        if: failure()
+        run: |
+          docker compose ps -a
+          docker compose logs --no-color --tail=150
+      - name: Stop containers
+        if: always()
+        run: docker compose down -v --remove-orphans
