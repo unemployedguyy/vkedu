@@ -1,0 +1,50 @@
+name: Superset Bronze Check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "superset/**"
+      - ".github/workflows/bi.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bi:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start Lakehouse
+        run: docker compose up -d
+      - name: Wait for Trino
+        run: python3 scripts/wait_for_trino.py
+      - name: Load Bronze test data
+        env:
+          TPCH_SCHEMA: tiny
+        run: python3 scripts/run.py setup
+      - name: Build Superset with Trino driver
+        run: docker compose --profile bi build superset
+      - name: Verify Bronze through BI container
+        run: docker compose --profile bi run --rm --no-deps --entrypoint /app/.venv/bin/python superset /app/bronze_check.py
+      - name: Start Superset web UI
+        run: docker compose --profile bi up -d superset
+      - name: Check Superset health
+        run: |
+          for i in $(seq 1 60); do
+            if curl --fail --silent http://localhost:8088/health >/dev/null; then
+              echo "Superset UI is reachable"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Superset did not become healthy"
+          exit 1
+      - name: Diagnostics
+        if: failure()
+        run: docker compose --profile bi logs --no-color --tail=100
+      - name: Cleanup
+        if: always()
+        run: docker compose --profile bi down -v --remove-orphans
