@@ -22,7 +22,7 @@ docker compose ps
 python scripts/run.py all
 ~~~
 
-Используется TPC-H \`sf1\`, как указано в отчете. Если ресурсов мало, для быстрой отладки можно выбрать \`tiny\`:
+Используется TPC-H `sf1`, как указано в отчете. Если ресурсов мало, для быстрой отладки можно выбрать `tiny`:
 
 ~~~bash
 TPCH_SCHEMA=tiny python scripts/run.py all
@@ -35,7 +35,7 @@ $env:TPCH_SCHEMA = 'tiny'
 python scripts/run.py all
 ~~~
 
-Данные из контейнеров сохраняются в Docker volumes. Повторный запуск скрипта пересоздает аналитические Iceberg-таблицы и измеряет их заново. Чтобы очистить все вместе с данными: \`docker compose down -v\`.
+Данные из контейнеров сохраняются в Docker volumes. Повторный запуск скрипта пересоздает аналитические Iceberg-таблицы и измеряет их заново. Чтобы очистить все вместе с данными: `docker compose down -v`.
 
 ## Проверка
 
@@ -43,9 +43,9 @@ python scripts/run.py all
 1. загрузку трех наборов Bronze: Parquet/GZIP, Parquet/ZSTD, ORC/ZSTD
 2. построение Silver и Gold
 3. сравнение исходного Q16 и Gold через две операции EXCEPT
-4. замер размера данных через Iceberg \`$files\`, прогрев и три запуска запросов
+4. замер размера данных через Iceberg `$files`, прогрев и три запуска запросов
 5. изменение схемы и запрос к предыдущему Iceberg-снапшоту
-6. запись \`results/metrics.json\` и заполнение \`report.md\`
+6. запись `results/metrics.json` и заполнение `report.md`
 
 Если проверка не пройдет, программа завершится с ошибкой. **Наличие файлов в репозитории само по себе не означает успешное выполнение**. Статус проверяется во вкладке Actions.
 
@@ -55,16 +55,26 @@ python scripts/run.py all
 docker compose --profile bi up -d --build superset
 ~~~
 
-Откройте \`http://localhost:8088\` (admin / admin123), добавьте Database с URI \`trino://student@trino:8080/iceberg/bronze_zstd\`. Затем откройте SQL Lab и выполните запрос из [sql/05_bronze_demo.sql](sql/05_bronze_demo.sql). Superset намеренно вынесен в отдельный профиль, чтобы не занимать память при тестах в CI.
+Откройте `http://localhost:8088` (admin / admin123), добавьте Database с URI `trino://student@trino:8080/iceberg/bronze_zstd`. Затем откройте SQL Lab и выполните запрос из [sql/05_bronze_demo.sql](sql/05_bronze_demo.sql). Superset намеренно вынесен в отдельный профиль, чтобы не занимать память при тестах в CI.
 
-Сервис Trino доступен на \`http://localhost:8080\`, Lakekeeper на \`http://localhost:8181\`, MinIO Console на \`http://localhost:9001\` (minioadmin / minioadmin123).
+Сервис Trino доступен на `http://localhost:8080`, Lakekeeper на `http://localhost:8181`, MinIO Console на `http://localhost:9001` (minioadmin / minioadmin123).
 
 ## Эксперименты
 
-Масштаб \`sf1\` выбран, чтобы можно было прогнать работу на обычном ноутбуке и ограниченном CI runner. Колонки Bronze: \`part(partkey, brand, type, size)\`, \`partsupp(partkey, suppkey)\`, \`supplier(suppkey, comment)\`. Для Silver и Gold выбран Parquet + ZSTD без партиционирования. Решения объясняются в [отчете](report.md).
+Масштаб `sf1` выбран, чтобы можно было прогнать работу на обычном ноутбуке и ограниченном CI runner. Колонки Bronze: `part(partkey, brand, type, size)`, `partsupp(partkey, suppkey)`, `supplier(suppkey, comment)`. Для Silver и Gold выбран Parquet + ZSTD без партиционирования. Решения объясняются в [отчете](report.md).
 
 ## Удаленная проверка
 
 Workflow [lakehouse.yml](.github/workflows/lakehouse.yml) пытается поднять стек на GitHub Actions и запустить полный сценарий. Измерения зависят от конкретного runner, а проверка Superset в UI остается отдельной демонстрацией.
+
+## Результаты проверенного запуска 17.10.2026
+
+- Q16 из TPC-H sf1 полностью совпал с Gold, получено **18 314** строк
+- Bronze: Parquet/GZIP **3.100 МиБ**, Parquet/ZSTD **2.965 МиБ**, ORC/ZSTD **1.934 МиБ**
+- Среднее время Q16 за три прогона: **0.770 с**, **0.630 с**, **0.616 с** соответственно
+- Schema evolution и time travel прошли проверку, до и после вставки было 10 и 11 строк
+- Машина GitHub Actions использовалась для запуска основных сервисов; подключение через интерфейс Superset требует отдельной демонстрации
+
+Детали измерений: [results/metrics.json](results/metrics.json), подробные таблицы: [report.md](report.md).
 
 Все пароли в Compose тестовые. Не публикуйте эти контейнеры в открытом интернете.
