@@ -33,12 +33,12 @@ jobs:
         run: docker compose --profile bi up -d --no-deps superset
       - name: Check Superset health
         run: |
-          for i in $(seq 1 60); do
+          for i in $(seq 1 40); do
             if curl --fail --silent http://localhost:8088/health >/dev/null; then
               echo "Superset UI is reachable"
               exit 0
             fi
-            sleep 5
+            sleep 3
           done
           echo "Superset did not become healthy"
           exit 1
