@@ -30,7 +30,7 @@ jobs:
       - name: Verify Bronze through BI container
         run: docker compose --profile bi run --rm --no-deps --entrypoint /app/.venv/bin/python superset /app/bronze_check.py
       - name: Start Superset web UI
-        run: docker compose --profile bi up -d superset
+        run: docker compose --profile bi up -d --no-deps superset
       - name: Check Superset health
         run: |
           for i in $(seq 1 60); do
