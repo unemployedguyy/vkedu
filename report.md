@@ -39,7 +39,7 @@ connector.name=iceberg
 iceberg.catalog.type=rest
 iceberg.rest-catalog.uri=http://lakekeeper:8181/catalog
 iceberg.rest-catalog.warehouse=demo
-fs.s3.enabled=true
+fs.native-s3.enabled=true
 s3.endpoint=http://minio:9000
 s3.path-style-access=true
 ~~~
