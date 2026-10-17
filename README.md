@@ -52,7 +52,8 @@ python scripts/run.py all
 ## Дополнительный инструмент
 
 ~~~bash
-docker compose --profile bi up -d --build superset
+docker compose --profile bi build superset
+docker compose --profile bi up -d --no-deps superset
 ~~~
 
 Откройте `http://localhost:8088` (admin / admin123), добавьте Database с URI `trino://student@trino:8080/iceberg/bronze_zstd`. Затем откройте SQL Lab и выполните запрос из [sql/05_bronze_demo.sql](sql/05_bronze_demo.sql). Superset намеренно вынесен в отдельный профиль, чтобы не занимать память при тестах в CI.
